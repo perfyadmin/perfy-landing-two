@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2, MessageCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 
 interface Props {
   open: boolean;
@@ -62,10 +62,15 @@ export const TalkToSalesDialog = ({ open, onOpenChange, selectedModules, scope }
     setErrors({});
     setSubmitting(true);
     try {
-      const { error } = await supabase.functions.invoke("send-sales-lead", {
-        body: { ...result.data, selected_modules: selectedModules, scope },
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/sales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...result.data, selected_modules: selectedModules, scope }),
       });
-      if (error) throw error;
+      if (!res.ok) {
+        throw new Error("Failed to send sales inquiry");
+      }
       setDone(true);
       toast.success("Thanks! Our sales team will reach out shortly.");
     } catch (err) {
